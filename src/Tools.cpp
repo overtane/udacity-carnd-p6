@@ -60,9 +60,9 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
         float dvdr1 = sqrt(dvdr2);
         float dvdr3 = dvdr1 * dvdr2;
         
-        Hj << px/dvdr1, py/dvdr1, 0, 0,
-        -py/dvdr2, px/dvdr2, 0, 0,
-        py*(vx*py-vy*px)/dvdr3, px*(vy*px-vx*py)/dvdr3, px/dvdr1, py/dvdr1;
+        Hj << px/dvdr1,               py/dvdr1,               0,        0,
+              -py/dvdr2,              px/dvdr2,               0,        0,
+              py*(vx*py-vy*px)/dvdr3, px*(vy*px-vx*py)/dvdr3, px/dvdr1, py/dvdr1;
     }
     
     return Hj;

@@ -6,8 +6,8 @@ add_definitions(-std=c++0x)
 
 set(sources
     src/FusionEKF.cpp
-    src/kalman_filter.cpp
+    src/KalmanFilter.cpp
     src/main.cpp
-    src/tools.cpp)
+    src/Tools.cpp)
 
 add_executable(ExtendedKF ${sources})

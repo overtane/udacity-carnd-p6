@@ -1,12 +1,12 @@
 #ifndef FusionEKF_H_
 #define FusionEKF_H_
 
-#include "measurement_package.h"
+#include "MeasurementPackage.h"
 #include <vector>
 #include <string>
 #include <fstream>
-#include "kalman_filter.h"
-#include "tools.h"
+#include "KalmanFilter.h"
+#include "Tools.h"
 
 class FusionEKF {
 public:
@@ -39,10 +39,16 @@ private:
 
   // tool object used to compute Jacobian and RMSE
   Tools tools;
-  MatrixXd R_laser_;
-  MatrixXd R_radar_;
-  MatrixXd H_laser_;
+  
+
+  MatrixXd R_laser_; // laser measurement covariance matrix
+  MatrixXd R_radar_; // radar measurement covariance matrix
+  MatrixXd H_laser_; // laser measurement matrix
   MatrixXd Hj_;
+
+  float noise_ax_;
+  float noise_ay_;
+
 };
 
 #endif /* FusionEKF_H_ */

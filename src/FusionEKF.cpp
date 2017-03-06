@@ -1,5 +1,5 @@
 #include "FusionEKF.h"
-#include "tools.h"
+#include "Tools.h"
 #include "Eigen/Dense"
 #include <iostream>
 
@@ -22,10 +22,42 @@ FusionEKF::FusionEKF() {
   H_laser_ = MatrixXd(2, 4);
   Hj_ = MatrixXd(3, 4);
 
-  /**
-  TODO:
-    * Finish initializing the FusionEKF.
-  */
+  // measurement covariance
+  R_laser_ << .127, 0,
+              0, .187;
+    
+  R_radar_ << .245, 0, 0,
+              0, .235, 0,
+              0, 0, .028;
+
+  // measurement matrix
+  H_laser_ << 1, 0, 0, 0,
+              0, 1, 0, 0;
+
+
+  // initial state covariance matrix P
+  MatrixXd P = MatrixXd(4, 4);
+  P << 1, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 10000, 0,
+       0, 0, 0, 10000;
+
+  // the initial transition matrix F
+  MatrixXd F = MatrixXd(4, 4);
+  F << 1, 0, 1, 0,
+       0, 1, 0, 1,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
+
+  VectorXd x  = VectorXd(4);
+  MatrixXd Q  = MatrixXd(4,4);
+
+  // create the filter
+  ekf_ = KalmanFilter(x, P, F, H_laser_, R_laser_, Q);
+
+  noise_ax_ = 4.88; 
+  noise_ay_ = 4.88;
+
 }
 
 /**
@@ -38,26 +70,21 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Initialization
    ****************************************************************************/
   if (!is_initialized_) {
-    /**
-    TODO:
-      * Initialize the state ekf_.x_ with the first measurement.
-      * Create the covariance matrix.
-      * Remember: you'll need to convert radar from polar to cartesian coordinates.
-    */
-    // first measurement
-    cout << "EKF: " << endl;
-    ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    //cout << "EKF: " << endl;
+
+    previous_timestamp_ = measurement_pack.timestamp_;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      /**
-      Convert radar from polar to cartesian coordinates and initialize state.
-      */
-    }
-    else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      /**
-      Initialize state.
-      */
+      float ro = measurement_pack.raw_measurements_[0];
+      float phi = measurement_pack.raw_measurements_[1];
+      ekf_.x_ << ro * cos(phi), ro * sin(phi), 0, 0;
+
+    } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
+      ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
+
+    } else {
+        cout << "Invalid sensor type" << endl;
+        return;
     }
 
     // done initializing, no need to predict or update
@@ -69,32 +96,50 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Prediction
    ****************************************************************************/
 
-  /**
-   TODO:
-     * Update the state transition matrix F according to the new elapsed time.
-      - Time is measured in seconds.
-     * Update the process noise covariance matrix.
-   */
-
+  // Compute the time elapsed between the current and previous measurements, in seconds
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	
+  previous_timestamp_ = measurement_pack.timestamp_;
+  //cout << dt << endl;
+    
+  // Modify the state transition matrix F so that the time is integrated
+  ekf_.F_(0,2) = dt;
+  ekf_.F_(1,3) = dt;
+    
+  // Compute the process covariance matrix Q
+  float t2 = dt * dt;
+  float t3 = (t2 * dt)/2;
+  float t4 = (t3 * dt)/4;
+  
+  float t4ax = t4*noise_ax_;
+  float t4ay = t4*noise_ay_;
+  float t3ax = t3*noise_ax_;
+  float t3ay = t3*noise_ay_;
+  float t2ax = t2*noise_ax_;
+  float t2ay = t2*noise_ay_;
+    
+  ekf_.Q_ << t4ax,    0,    t3ax, 0,
+             0,       t4ay, 0,    t3ay,
+             t3ax,    0,    t2ax, 0,
+             0,       t3ay, 0,    t2ay;
+    
+  // Call the Kalman Filter predict() function
   ekf_.Predict();
 
   /*****************************************************************************
    *  Update
    ****************************************************************************/
 
-  /**
-   TODO:
-     * Use the sensor type to perform the update step.
-     * Update the state and covariance matrices.
-   */
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    // Radar updates
-  } else {
-    // Laser updates
+
+    Hj_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.Update(measurement_pack.raw_measurements_, Hj_, R_radar_);
+
+  } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
+
+    ekf_.Update(measurement_pack.raw_measurements_, H_laser_, R_laser_);
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+  //cout << "x_ = " << ekf_.x_ << endl;
+  //cout << "P_ = " << ekf_.P_ << endl;
 }

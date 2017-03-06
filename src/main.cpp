@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include "Eigen/Dense"
 #include "FusionEKF.h"
-#include "ground_truth_package.h"
-#include "measurement_package.h"
+#include "GroundTruthPackage.h"
+#include "MeasurementPackage.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -66,6 +66,9 @@ int main(int argc, char* argv[]) {
 
   string line;
 
+  bool laser_only = false;
+  bool radar_only = false;
+
   // prep the measurement packages (each line represents a measurement at a
   // timestamp)
   while (getline(in_file_, line)) {
@@ -80,6 +83,8 @@ int main(int argc, char* argv[]) {
     iss >> sensor_type;
     if (sensor_type.compare("L") == 0) {
       // LASER MEASUREMENT
+      if (radar_only)
+          continue;
 
       // read measurements at this timestamp
       meas_package.sensor_type_ = MeasurementPackage::LASER;
@@ -94,6 +99,8 @@ int main(int argc, char* argv[]) {
       measurement_pack_list.push_back(meas_package);
     } else if (sensor_type.compare("R") == 0) {
       // RADAR MEASUREMENT
+      if (laser_only)
+          continue;
 
       // read measurements at this timestamp
       meas_package.sensor_type_ = MeasurementPackage::RADAR;
@@ -131,7 +138,7 @@ int main(int argc, char* argv[]) {
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  //Call the EKF-based fusion
+  // Call the EKF-based fusion
   size_t N = measurement_pack_list.size();
   for (size_t k = 0; k < N; ++k) {
     // start filtering from the second frame (the speed is unknown in the first

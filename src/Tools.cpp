@@ -49,7 +49,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
     //TODO: YOUR CODE HERE
     
     //check division by zero
-    if (fabs(px)<0.00001 && fabs(py)<0.00001) {
+    if (fabs(px)<0.001 && fabs(py)<0.001) {
         Hj << 0, 0, 0, 0,
               0, 0, 0, 0,
               0, 0, 0, 0;

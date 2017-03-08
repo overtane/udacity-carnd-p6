@@ -23,11 +23,11 @@ FusionEKF::FusionEKF() {
   Hj_ = MatrixXd(3, 4);
 
   // measurement covariance
-  R_laser_ << .15, 0,
-              0, .15;
+  R_laser_ << .015, 0,
+              0, .015;
     
   R_radar_ << .3, 0,  0,
-              0, .03, 0,
+              0, .00003, 0,
               0, 0,   .3;
 
   // measurement matrix
@@ -55,8 +55,8 @@ FusionEKF::FusionEKF() {
   // create the filter
   ekf_ = KalmanFilter(x, P, F, H_laser_, R_laser_, Q);
 
-  noise_ax_ = 50; 
-  noise_ay_ = 50;
+  noise_ax_ = 1000; 
+  noise_ay_ = 1000;
 
 }
 

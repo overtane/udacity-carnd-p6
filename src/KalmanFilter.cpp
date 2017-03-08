@@ -32,13 +32,14 @@ void KalmanFilter::Predict() {
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-    Update(z, H_, R_);
+
+    VectorXd y = z - (H_ * x_);
+    Update(y, H_, R_);
 }
 
-void KalmanFilter::Update(const VectorXd &z, const MatrixXd &H, const MatrixXd &R) {
+void KalmanFilter::Update(const VectorXd &y, const MatrixXd &H, const MatrixXd &R) {
     
     // measurement update
-    VectorXd y = z - (H * x_);
     MatrixXd Ht = H.transpose();
     MatrixXd S = H * P_ * Ht + R;
     MatrixXd K = P_ * Ht * S.inverse();
@@ -46,6 +47,9 @@ void KalmanFilter::Update(const VectorXd &z, const MatrixXd &H, const MatrixXd &
     // new estimate
     x_ = x_ + (K * y);
     P_ = (I_ - K * H) * P_;
+
+    H_ = H;
+    R_ = R;
 }
 
 

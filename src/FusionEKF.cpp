@@ -23,12 +23,12 @@ FusionEKF::FusionEKF() {
   Hj_ = MatrixXd(3, 4);
 
   // measurement covariance
-  R_laser_ << .127, 0,
-              0, .173;
+  R_laser_ << .15, 0,
+              0, .15;
     
-  R_radar_ << .245, 0, 0,
-              0, .235, 0,
-              0, 0, .028;
+  R_radar_ << .3, 0,  0,
+              0, .03, 0,
+              0, 0,   .3;
 
   // measurement matrix
   H_laser_ << 1, 0, 0, 0,
@@ -55,8 +55,8 @@ FusionEKF::FusionEKF() {
   // create the filter
   ekf_ = KalmanFilter(x, P, F, H_laser_, R_laser_, Q);
 
-  noise_ax_ = 4.88; 
-  noise_ay_ = 4.88;
+  noise_ax_ = 50; 
+  noise_ay_ = 50;
 
 }
 
@@ -102,9 +102,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.F_(0,2) = dt;
   ekf_.F_(1,3) = dt;
     
-  
-  // skip prediction, if measurement has the same timestamp as previous
-  if (previous_timestamp_ < measurement_pack.timestamp_) {
+  // skip prediction, if measurement has (about) the same timestamp as previous
+  // timestamps are microseconds
+  if (previous_timestamp_ < measurement_pack.timestamp_ - 100) {
 
     float t2 = dt * dt;
     float t3 = (t2 * dt)/2;
@@ -124,21 +124,43 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                0,       t3ay, 0,    t2ay;
     
     ekf_.Predict();
+
+    // update prediction timestamp only if we did prediction
+    previous_timestamp_ = measurement_pack.timestamp_;
   }
 
-  previous_timestamp_ = measurement_pack.timestamp_;
   /*****************************************************************************
    *  Update
    ****************************************************************************/
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
+    
+    float px = ekf_.x_(0);
+    float py = ekf_.x_(1);
+    float vx = ekf_.x_(2);
+    float vy = ekf_.x_(3);
+
+    // compute radar h(x) from predicted state 
+    VectorXd h(3);
+    h(0) = sqrt(px*px + py*py);         // r
+    if (fabs(h(0) > 0.001)) {
+        h(1) = atan2(py,px);            // phi
+        h(2) = (px*vx + py*vy ) / h(0); // r_dot
+    } else {
+        h(1) = 0.0;
+        h(2) = 0.0;
+    }
 
     Hj_ = tools.CalculateJacobian(ekf_.x_);
-    ekf_.Update(measurement_pack.raw_measurements_, Hj_, R_radar_);
+
+    VectorXd y = measurement_pack.raw_measurements_ - h; 
+    
+    ekf_.Update(y, Hj_, R_radar_);
 
   } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
 
-    ekf_.Update(measurement_pack.raw_measurements_, H_laser_, R_laser_);
+    VectorXd y = measurement_pack.raw_measurements_ - (H_laser_ * ekf_.x_); 
+    ekf_.Update(y, H_laser_, R_laser_);
   }
 
   // print the output

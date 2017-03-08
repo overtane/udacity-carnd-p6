@@ -37,9 +37,9 @@ public:
     /**
      * Constructors
      */
-    KalmanFilter();
-    
-    KalmanFilter(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
+    KalmanFilter(); // default constructor
+
+    KalmanFilter(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in, // initializing contructor
                  MatrixXd &H_in, MatrixXd &R_in, MatrixXd &Q_in);
     
     /**
@@ -55,11 +55,31 @@ public:
     
     /**
      * Updates the state and the state covariance
+     *
+     * Method uses the latest measurement, and the instance variables for calculation. 
+     *
      * @param z The measurement at k+1
      */
     void Update(const VectorXd &z);
 
-    void Update(const VectorXd &z, const MatrixXd &H, const MatrixXd &R);
+    /*
+     * Updates the state and the state covariance.
+     *
+     * This version passes in sensor dependent vectors and matrices, so this can be
+     * used for all sensor types.
+     *
+     * Method uses pre-calculated delta vector y, which is the difference of measurement vector k+1
+     * and state prediction k+1.
+     *  
+     * Also, a sensor type dependent measurement matrix is passed in. For linear measurement models, 
+     * this is a fixed matrix, and for non-linear a calculated Jacobian matrix.
+     *
+     *
+     * @param y delta of the measurement k+1 and predicted state k+1
+     * @param H measurement matrix for state update
+     * @param R noise covariance matrix of the sensor
+     */
+    void Update(const VectorXd &y, const MatrixXd &H, const MatrixXd &R);
     
 private:
 

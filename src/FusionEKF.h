@@ -34,7 +34,7 @@ private:
   // check whether the tracking toolbox was initiallized or not (first measurement)
   bool is_initialized_;
 
-  // previous timestamp
+  // previous prediction timestamp (timestamp of the measurement that was used for prediction)
   long previous_timestamp_;
 
   // tool object used to compute Jacobian and RMSE

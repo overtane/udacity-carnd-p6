@@ -1,6 +1,11 @@
 #include <iostream>
 #include "Tools.h"
 
+// return the argument that has greater absolute value
+static double absmax(double a, double b) {
+    return fabs(a) > fabs(b) ? a : b;
+}
+
 Tools::Tools() {}
 
 Tools::~Tools() {}
@@ -46,26 +51,41 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
     float vx = x_state(2);
     float vy = x_state(3);
     
-    //TODO: YOUR CODE HERE
-    
     //check division by zero
-    if (fabs(px)<0.001 && fabs(py)<0.001) {
-        Hj << 0, 0, 0, 0,
-              0, 0, 0, 0,
-              0, 0, 0, 0;
-        cout << "Division by zero" << endl;
+    if (fabs(px)<0.0001 && fabs(py)<0.0001) {
+	// handle possible div by zero situation
+	// initialize to limits px->0, py->0
+        Hj <<       0,    0, 0, 0,
+                 1e+9, 1e+9, 0, 0,
+                    0,    0, 0, 0;
     } else {
         //compute the Jacobian matrix
-        float dvdr2 = px*px + py*py;
-        float dvdr1 = sqrt(dvdr2);
-        float dvdr3 = dvdr1 * dvdr2;
+        float dvsr2 = px*px + py*py;
+        float dvsr1 = sqrt(dvsr2);
+        float dvsr3 = dvsr1 * dvsr2;
         
-        Hj << px/dvdr1,               py/dvdr1,               0,        0,
-              -py/dvdr2,              px/dvdr2,               0,        0,
-              py*(vx*py-vy*px)/dvdr3, px*(vy*px-vx*py)/dvdr3, px/dvdr1, py/dvdr1;
+        Hj << px/dvsr1,               py/dvsr1,               0,        0,
+              -py/dvsr2,              px/dvsr2,               0,        0,
+              py*(vx*py-vy*px)/dvsr3, px*(vy*px-vx*py)/dvsr3, px/dvsr1, py/dvsr1;
     }
     
     return Hj;
+}
 
+VectorXd Tools::CalculateRadarMeasurementFunction(VectorXd &x) {    
 
+    VectorXd h(3);
+
+    double px = x(0);
+    double py = x(1);
+    double vx = x(2);
+    double vy = x(3);
+
+    // compute radar h(x) from predicted state 
+    // in case of zero position, use an estimate close to zero in order to avoid div by zero
+    h(0) = absmax(0.00001, sqrt(px*px + py*py)); // r
+    h(1) = atan2(py,px);            // phi
+    h(2) = (px*vx + py*vy ) / h(0); // r_dot
+ 
+    return h;
 }

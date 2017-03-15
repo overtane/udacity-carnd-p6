@@ -5,7 +5,7 @@
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-using namespace std;
+using std::vector;
 
 class Tools {
 public:
@@ -28,6 +28,11 @@ public:
   * A helper method to calculate Jacobians.
   */
   MatrixXd CalculateJacobian(const VectorXd& x_state);
+
+  /**
+   * Compute radar measurement function h(x) from predicted state  
+   */
+  VectorXd CalculateRadarMeasurementFunction(VectorXd &x);
 
 };
 

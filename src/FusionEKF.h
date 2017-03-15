@@ -21,9 +21,18 @@ public:
   virtual ~FusionEKF();
 
   /**
+   * Initialize state vector with first valid measurement
+   */
+  void InitializeMeasurement(const MeasurementPackage &mp);
+  /**
   * Run the whole flow of the Kalman Filter from here.
   */
   void ProcessMeasurement(const MeasurementPackage &measurement_pack);
+
+  /**
+   * Calculate process covariance matrix Q
+   */
+  void CalculateProcessCovariance(double dt);
 
   /**
   * Kalman Filter update and prediction math lives in here.
@@ -40,7 +49,6 @@ private:
   // tool object used to compute Jacobian and RMSE
   Tools tools;
   
-
   MatrixXd R_laser_; // laser measurement covariance matrix
   MatrixXd R_radar_; // radar measurement covariance matrix
   MatrixXd H_laser_; // laser measurement matrix

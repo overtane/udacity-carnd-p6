@@ -66,8 +66,9 @@ int main(int argc, char* argv[]) {
 
   string line;
 
-  bool laser_only = false;
-  bool radar_only = false;
+  bool laser_data = true;
+  bool radar_data = true;
+  int n_meas = 0;
 
   // prep the measurement packages (each line represents a measurement at a
   // timestamp)
@@ -83,7 +84,7 @@ int main(int argc, char* argv[]) {
     iss >> sensor_type;
     if (sensor_type.compare("L") == 0) {
       // LASER MEASUREMENT
-      if (radar_only)
+      if (!laser_data)
           continue;
 
       // read measurements at this timestamp
@@ -99,7 +100,7 @@ int main(int argc, char* argv[]) {
       measurement_pack_list.push_back(meas_package);
     } else if (sensor_type.compare("R") == 0) {
       // RADAR MEASUREMENT
-      if (laser_only)
+      if (!radar_data)
           continue;
 
       // read measurements at this timestamp
@@ -129,6 +130,10 @@ int main(int argc, char* argv[]) {
     gt_package.gt_values_ = VectorXd(4);
     gt_package.gt_values_ << x_gt, y_gt, vx_gt, vy_gt;
     gt_pack_list.push_back(gt_package);
+  
+    n_meas++;
+    //if (n_meas > 6) break;
+  
   }
 
   // Create a Fusion EKF instance
@@ -141,8 +146,7 @@ int main(int argc, char* argv[]) {
   // Call the EKF-based fusion
   size_t N = measurement_pack_list.size();
   for (size_t k = 0; k < N; ++k) {
-    // start filtering from the second frame (the speed is unknown in the first
-    // frame)
+
     fusionEKF.ProcessMeasurement(measurement_pack_list[k]);
 
     // output the estimation

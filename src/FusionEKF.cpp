@@ -8,11 +8,6 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-// return the argument that has greater absolute value
-static double absmax(double a, double b) {
-    return fabs(a) > fabs(b) ? a : b;
-}
-
 /*
  * Constructor.
  */

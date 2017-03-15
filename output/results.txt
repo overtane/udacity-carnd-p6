@@ -1,0 +1,14 @@
+Olli-MBP13:build olli$ ./ExtendedKF ../data/sample-laser-radar-measurement-data-1.txt t1.txt
+Initialize
+Accuracy - RMSE:
+0.0651649
+0.0605378
+  0.54319
+ 0.544191
+Olli-MBP13:build olli$ ./ExtendedKF ../data/sample-laser-radar-measurement-data-2.txt t2.txt
+Initialize
+Accuracy - RMSE:
+0.185497
+0.190308
+0.476756
+0.804357

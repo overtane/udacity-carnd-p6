@@ -31,12 +31,12 @@ FusionEKF::FusionEKF() :
   Hj_ = MatrixXd(3, 4);
 
   // measurement covariance
-  R_laser_ << .0225, 0,
-              0, .0225;
+  R_laser_ << .0225,     0,
+                  0, .0225;
     
-  R_radar_ << .09, 0,  0,
-              0, .0009, 0,
-              0, 0,  .09;
+  R_radar_ << .09,     0,    0,
+                0, .0009,    0,
+                0,     0,  .09;
 
   // measurement matrix
   H_laser_ << 1, 0, 0, 0,
@@ -44,10 +44,10 @@ FusionEKF::FusionEKF() :
 
   // initial state covariance matrix P
   MatrixXd P = MatrixXd(4, 4);
-  P << 1, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1000, 0,
-       0, 0, 0, 1000;
+  P << 1, 0,    0,    0,
+       0, 1,    0,    0,
+       0, 0, 1000,    0,
+       0, 0,    0, 1000;
 
   // the initial transition matrix F
   MatrixXd F = MatrixXd(4, 4);
@@ -105,10 +105,8 @@ void FusionEKF::CalculateProcessCovariance(double dt) {
 	
     // Compute the process covariance matrix Q
     double t2 = dt*dt;
-    double t3 = t2*dt;
-    double t4 = t3*dt;
-    t3 /= 2;
-    t4 /= 4;
+    double t3 = t2*dt/2;
+    double t4 = t3*dt/2;
   
     double t4ax = t4*noise_ax_;
     double t4ay = t4*noise_ay_;

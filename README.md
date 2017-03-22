@@ -1,4 +1,4 @@
-# Extended Kalman Filter Project Starter Code
+# Extended Kalman Filter / Sensor Fusion Project
 Self-Driving Car Engineer Nanodegree Program
 
 ---
